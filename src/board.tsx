@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import styled from '@emotion/styled';
 import produce from 'immer';
 
@@ -12,23 +12,26 @@ const neighbors = [
     [1,-1],
     [1,0],
     [1,1]
-]
+];
+const initialBoard=()=>{
+    let result=[];
+    for(let i=0;i<SIZE;i++){
+        let arr=new Array(SIZE).fill(0);
+        result.push(arr);
+    }
+    return result;
+}
+
 const Board = () => {
     const [board, setBoard] = useState(()=>{
-        let result=[];
-        for(let i=0;i<SIZE;i++){
-            let arr=new Array(SIZE).fill(0);
-            result.push(arr);
-        }
-        return result;
+        return initialBoard();
     });
     const [running, setRunning] = useState(false);
-    const runRef = useRef(running);
-    runRef.current=running;
+    const runRef = useRef(running);//initial
+    runRef.current=running;//assign
 
-    const run=useCallback(()=>{
+    const run=()=>{
         if(!runRef.current) return;
-        
         setBoard(board=>{
             return produce(board, copy=>{
                 for(let i=0;i<SIZE;i++){
@@ -45,11 +48,12 @@ const Board = () => {
                 }
             })
         })
-        setTimeout(run,1000)
-    },[]);
+  setTimeout(run,500)
+    };
 
     return (
         <>
+        <Buttons>
             <button 
                 onClick={()=>{
                     setRunning(!running);
@@ -62,16 +66,27 @@ const Board = () => {
             >
                 {running?'stop':'start'}
             </button>
+            <button
+                onClick={()=>{
+                    setBoard(initialBoard());
+                    setRunning(!running);
+                    runRef.current=false;
+                }}
+            >
+                empty board
+            </button>
+            </Buttons>
             <Container>
                 {board.map((row:any, i:any)=>
                     row.map((cell:any, j:any)=>(
                     <Cell 
                         key={`${i}+${j}`} 
                         onClick={()=>{
-                            const nextState=produce(board, draft =>{
-                                draft[i][j]=board[i][j]===0?1:0;
-                            });
-                            setBoard(nextState);
+                            setBoard(board=>{
+                                return produce(board, draft =>{
+                                    draft[i][j]=board[i][j]===0?1:0;
+                                });
+                            })
                         }} 
                         check={board[i][j]}
                     >
@@ -88,8 +103,15 @@ export default Board;
 interface cellProps{
     check:boolean;
 }
+
+const Buttons=styled('div')`
+    margin-top:1em;
+    display:flex;
+    gap:30px;
+    align-items: center;
+`
 const Container=styled('div')`
-    margin-top:2em;
+    margin-top:1em;
     display:grid;
     grid-template-rows:repeat(50, 20px);
     grid-template-columns:repeat(50,20px);
